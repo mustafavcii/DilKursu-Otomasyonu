@@ -1,0 +1,254 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <conio.h>
+
+using namespace std;
+
+struct DilKursu {
+    char kursAdi[80];
+    char egitmen[80];
+    int kursKodu;
+    int sureHaftada;
+};
+
+void kursEkle();
+void kursListele();
+void kursAra();
+void kursSil();
+void kursDuzenle();
+
+int main() {
+    char anaMenu;
+    do {
+        system("cls");
+        cout << "|----- Dil Kursu Otomasyonu -----|" << endl;
+        cout << "|      Bir Secenek Secin         |" << endl;
+        cout << "|   1- Kurs Ekleme               |" << endl;
+        cout << "|   2- Kurs Listeleme            |" << endl;
+        cout << "|   3- Kurs Arama                |" << endl;
+        cout << "|   4- Kurs Silme                |" << endl;
+        cout << "|   5- Kurs Duzenleme            |" << endl;
+        cout << "|--------------------------------|" << endl;
+        char secim;
+        cin >> secim;
+
+        switch (secim) {
+            case '1':
+                kursEkle();
+                break;
+            case '2':
+                kursListele();
+                break;
+            case '3':
+                kursAra();
+                break;
+            case '4':
+                kursSil();
+                break;
+            case '5':
+                kursDuzenle();
+                break;
+        }
+
+        cout << "Ana Menuye Donmek icin (a) veya Cikmak icin (c): ";
+        anaMenu = getche();
+    } while (anaMenu == 'a' || anaMenu == 'A');
+
+    return 0;
+}
+
+void kursEkle() {
+    ofstream dosya("kurslar.dat", ios::binary | ios::app);
+    DilKursu yeniKurs;
+
+    cout << "Kurs Adini Giriniz: ";
+    cin.ignore();
+    cin.getline(yeniKurs.kursAdi, sizeof(yeniKurs.kursAdi));
+
+    cout << "Egitmenin Adini Giriniz: ";
+    cin.getline(yeniKurs.egitmen, sizeof(yeniKurs.egitmen));
+
+    cout << "Kurs Kodunu Giriniz: ";
+    cin >> yeniKurs.kursKodu;
+
+    cout << "Haftada Kac Saat: ";
+    cin >> yeniKurs.sureHaftada;
+
+    dosya.write((char*)&yeniKurs, sizeof(yeniKurs));
+
+    cout << "Kurs Basariyla Eklendi!" << endl;
+
+    dosya.close();
+}
+
+void kursListele() {
+    ifstream dosya("kurslar.dat", ios::binary);
+    dosya.seekg(0, ios::end);
+
+    int kursSayisi = dosya.tellg() / sizeof(DilKursu);
+
+    if (kursSayisi > 0) {
+        dosya.seekg(0, ios::beg);
+        for (int i = 0; i < kursSayisi; i++) {
+            DilKursu mevcutKurs;
+            dosya.read((char*)&mevcutKurs, sizeof(mevcutKurs));
+
+            cout << i + 1 << ". Kurs Bilgileri" << endl;
+            cout << "Kurs Adi: " << mevcutKurs.kursAdi << endl;
+            cout << "Egitmen: " << mevcutKurs.egitmen << endl;
+            cout << "Kurs Kodu: " << mevcutKurs.kursKodu << endl;
+            cout << "Sure: " << mevcutKurs.sureHaftada << " haftada" << endl;
+            cout << "--------------------------------" << endl;
+        }
+    } else {
+        cout << "Herhangi Bir Kurs Bulunamadi." << endl;
+    }
+
+    dosya.close();
+}
+
+void kursAra() {
+    ifstream dosya("kurslar.dat", ios::binary);
+    dosya.seekg(0, ios::end);
+
+    int kursSayisi = dosya.tellg() / sizeof(DilKursu);
+
+    if (kursSayisi > 0) {
+        cout << "Aramak Istediginiz Kurs Kodunu Giriniz: ";
+        int aramaKodu;
+        cin >> aramaKodu;
+
+        dosya.seekg(0, ios::beg);
+        bool bulundu = false;
+
+        for (int i = 0; i < kursSayisi; i++) {
+            DilKursu mevcutKurs;
+            dosya.read((char*)&mevcutKurs, sizeof(mevcutKurs));
+
+            if (mevcutKurs.kursKodu == aramaKodu) {
+                bulundu = true;
+                cout << "Kurs Bilgileri" << endl;
+                cout << "Kurs Adi: " << mevcutKurs.kursAdi << endl;
+                cout << "Egitmen: " << mevcutKurs.egitmen << endl;
+                cout << "Kurs Kodu: " << mevcutKurs.kursKodu << endl;
+                cout << "Sure: " << mevcutKurs.sureHaftada << " haftada" << endl;
+                break;
+            }
+        }
+
+        if (!bulundu)
+            cout << "Kurs Bulunamadi." << endl;
+    } else {
+        cout << "Herhangi Bir Kurs Bulunamadi." << endl;
+    }
+
+    dosya.close();
+}
+
+void kursSil() {
+    int silinecekKod;
+    char secim = ' ';
+    bool var = false;
+
+    ifstream dosya("kurslar.dat", ios::binary);
+    ofstream tempDosya("temp.dat", ios::binary | ios::app);
+    dosya.seekg(0, ios::end);
+
+    int kursSayisi = dosya.tellg() / sizeof(DilKursu);
+
+    cout << "Silinecek Kursun Kodunu Giriniz: ";
+    cin >> silinecekKod;
+
+    for (int i = 0; i < kursSayisi; i++) {
+        dosya.seekg(i * sizeof(DilKursu));
+        DilKursu mevcutKurs;
+        dosya.read((char*)&mevcutKurs, sizeof(mevcutKurs));
+
+        if (mevcutKurs.kursKodu == silinecekKod) {
+            cout << endl;
+            cout << "Kursun";
+            cout << "\nAdi: " << mevcutKurs.kursAdi;
+            cout << "\nEgitmen: " << mevcutKurs.egitmen << endl;
+            cout << "\nKodu: " << mevcutKurs.kursKodu;
+            cout << "\nSure: " << mevcutKurs.sureHaftada << " haftada" << endl;
+            var = true;
+        } else {
+            tempDosya.write((char*)&mevcutKurs, sizeof(mevcutKurs));
+        }
+    }
+
+    dosya.close();
+    tempDosya.close();
+
+    remove("kurslar.dat");
+    rename("temp.dat", "kurslar.dat");
+
+    if (var) {
+        cout << "Kurs Basariyla Silindi!" << endl;
+    } else {
+        cout << "Silinecek Kurs Bulunamadi!" << endl;
+    }
+}
+
+void kursDuzenle() {
+    int duzenlenecekKod;
+    char secim = ' ';
+    bool var = false;
+
+    ifstream dosya("kurslar.dat", ios::binary);
+    ofstream tempDosya("temp.dat", ios::binary | ios::app);
+    dosya.seekg(0, ios::end);
+
+    int kursSayisi = dosya.tellg() / sizeof(DilKursu);
+
+    cout << "Duzenlenecek Kursun Kodunu Giriniz: ";
+    cin >> duzenlenecekKod;
+
+    for (int i = 0; i < kursSayisi; i++) {
+        dosya.seekg(i * sizeof(DilKursu));
+        DilKursu mevcutKurs;
+        dosya.read((char*)&mevcutKurs, sizeof(mevcutKurs));
+
+        if (mevcutKurs.kursKodu == duzenlenecekKod) {
+            cout << endl;
+            cout << "Kursun";
+            cout << "\nAdi: " << mevcutKurs.kursAdi;
+            cout << "\nEgitmen: " << mevcutKurs.egitmen << endl;
+            cout << "\nKodu: " << mevcutKurs.kursKodu;
+            cout << "\nSure: " << mevcutKurs.sureHaftada << " haftada" << endl;
+            var = true;
+
+            DilKursu duzenlenmisKurs;
+
+            cout << "Yeni Kurs Adi: ";
+            cin.ignore();
+            cin.getline(duzenlenmisKurs.kursAdi, sizeof(duzenlenmisKurs.kursAdi));
+
+            cout << "Yeni Egitmen Adi: ";
+            cin.getline(duzenlenmisKurs.egitmen, sizeof(duzenlenmisKurs.egitmen));
+
+            cout << "Yeni Kurs Kodu: ";
+            cin >> duzenlenmisKurs.kursKodu;
+
+            cout << "Yeni Haftada Kac Saat: ";
+            cin >> duzenlenmisKurs.sureHaftada;
+
+            tempDosya.write((char*)&duzenlenmisKurs, sizeof(duzenlenmisKurs));
+        } else {
+            tempDosya.write((char*)&mevcutKurs, sizeof(mevcutKurs));
+        }
+    }
+
+    dosya.close();
+    tempDosya.close();
+
+    remove("kurslar.dat");
+    rename("temp.dat", "kurslar.dat");
+
+    if (var) {
+        cout << "Kurs Basariyla Duzenlendi!" << endl;
+    } else {
+        cout << "Duzenlenecek Kurs Bulunamadi!" << endl;
+    }
+}
